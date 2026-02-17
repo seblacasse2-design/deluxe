@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boutique E-Commerce - Moderne & Élégant</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Syne:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #f5f0e8;
+            --accent: #d4a574;
+            --accent-dark: #b88b5a;
+            --text: #2d2d2d;
+            --text-light: #6b6b6b;
+            --bg-light: #fafaf8;
+            --border: #e5e0d8;
+            --shadow: rgba(26, 26, 26, 0.08);
+            --shadow-hover: rgba(26, 26, 26, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg-light);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent) 0%, #f0d5a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            background: var(--accent);
+            padding: 0.7rem 1.2rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .cart-icon:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 165, 116, 0.4);
+        }
+
+        .cart-badge {
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
+            color: white;
+            padding: 5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(212, 165, 116, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 30%, rgba(212, 165, 116, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .filter-btn {
+            padding: 0.8rem 1.8rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-hover);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Product Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px var(--shadow-hover);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--bg-light) 100%);
+            transition: transform 0.4s ease;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-info {
+            padding: 1.8rem;
+        }
+
+        .product-category {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .product-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-price {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .add-to-cart-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.8rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-to-cart-btn:hover {
+            background: var(--accent-dark);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(212, 165, 116, 0.4);
+        }
+
+        /* Cart Sidebar */
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 450px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 30px var(--shadow-hover);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.open {
+            transform: translateX(0);
+            animation: slideInRight 0.4s ease;
+        }
+
+        .cart-header {
+            padding: 2rem;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+        }
+
+        .close-cart:hover {
+            color: var(--accent);
+            transform: rotate(90deg);
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            animation: scaleIn 0.3s ease;
+        }
+
+        .cart-item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: var(--secondary);
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .cart-item-price {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .quantity-btn {
+            background: var(--secondary);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .remove-item {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            margin-left: auto;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-item:hover {
+            color: #d32f2f;
+        }
+
+        .cart-footer {
+            padding: 2rem;
+            border-top: 2px solid var(--border);
+            background: var(--bg-light);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .cart-total strong {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .checkout-btn:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px var(--shadow-hover);
+        }
+
+        /* Auth Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: scaleIn 0.3s ease;
+        }
+
+        .modal h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(212, 165, 116, 0.4);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .auth-switch button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Admin Dashboard */
+        .admin-dashboard {
+            background: var(--bg-light);
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+
+        .admin-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px var(--shadow-hover);
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .admin-sections {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .admin-section {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+
+        .admin-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            text-align: left;
+            padding: 1rem;
+            background: var(--secondary);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .admin-table td {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .admin-table tr:hover {
+            background: var(--bg-light);
+        }
+
+        .action-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.delete {
+            background: #d32f2f;
+        }
+
+        .action-btn.delete:hover {
+            background: #b71c1c;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-cart i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* User Profile */
+        .profile-section {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .profile-info h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-history-item {
+            padding: 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .order-history-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .order-number {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .order-status {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .order-status.delivered {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .order-status.processing {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-sidebar {
+                width: 100%;
+            }
+
+            .nav {
+                gap: 1rem;
+            }
+
+            .nav-link {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Sample Products Data
+        const sampleProducts = [
+            {
+                id: 1,
+                name: "Casque Sans Fil Premium",
+                category: "Audio",
+                price: 299.99,
+                description: "Son haute fidélité avec réduction de bruit active",
+                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
+                stock: 15
+            },
+            {
+                id: 2,
+                name: "Montre Connectée Elite",
+                category: "Technologie",
+                price: 449.99,
+                description: "Suivi santé avancé avec GPS intégré",
+                image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600",
+                stock: 8
+            },
+            {
+                id: 3,
+                name: "Sac à Dos Cuir",
+                category: "Accessoires",
+                price: 189.99,
+                description: "Cuir véritable avec compartiment laptop",
+                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600",
+                stock: 12
+            },
+            {
+                id: 4,
+                name: "Lampe Design Moderne",
+                category: "Maison",
+                price: 149.99,
+                description: "Éclairage LED ajustable avec contrôle tactile",
+                image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600",
+                stock: 20
+            },
+            {
+                id: 5,
+                name: "Lunettes de Soleil Luxe",
+                category: "Accessoires",
+                price: 259.99,
+                description: "Protection UV400 avec verres polarisés",
+                image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600",
+                stock: 25
+            },
+            {
+                id: 6,
+                name: "Enceinte Bluetooth",
+                category: "Audio",
+                price: 179.99,
+                description: "Son 360° avec batterie 24h d'autonomie",
+                image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600",
+                stock: 18
+            }
+        ];
+
+        // Main App Component
+        function App() {
+            const [view, setView] = useState('shop'); // shop, profile, admin
+            const [cart, setCart] = useState([]);
+            const [cartOpen, setCartOpen] = useState(false);
+            const [user, setUser] = useState(null);
+            const [showAuthModal, setShowAuthModal] = useState(false);
+            const [authMode, setAuthMode] = useState('login'); // login or register
+            const [selectedCategory, setSelectedCategory] = useState('Tous');
+            const [products] = useState(sampleProducts);
+            const [orders] = useState([
+                { id: 'ORD-001', date: '2026-02-10', total: 449.98, status: 'delivered', items: 2 },
+                { id: 'ORD-002', date: '2026-02-15', total: 299.99, status: 'processing', items: 1 }
+            ]);
+
+            const categories = ['Tous', ...new Set(products.map(p => p.category))];
+            const filteredProducts = selectedCategory === 'Tous' 
+                ? products 
+                : products.filter(p => p.category === selectedCategory);
+
+            const addToCart = (product) => {
+                const existingItem = cart.find(item => item.id === product.id);
+                if (existingItem) {
+                    setCart(cart.map(item => 
+                        item.id === product.id 
+                            ? { ...item, quantity: item.quantity + 1 }
+                            : item
+                    ));
+                } else {
+                    setCart([...cart, { ...product, quantity: 1 }]);
+                }
+                setCartOpen(true);
+            };
+
+            const updateQuantity = (id, delta) => {
+                setCart(cart.map(item => {
+                    if (item.id === id) {
+                        const newQuantity = item.quantity + delta;
+                        return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
+                    }
+                    return item;
+                }).filter(item => item.quantity > 0));
+            };
+
+            const removeFromCart = (id) => {
+                setCart(cart.filter(item => item.id !== id));
+            };
+
+            const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            const handleCheckout = () => {
+                if (!user) {
+                    setShowAuthModal(true);
+                    setAuthMode('login');
+                } else {
+                    alert('Redirection vers Stripe Checkout...\n\nDans une vraie application, vous seriez redirigé vers la page de paiement Stripe sécurisée.');
+                }
+            };
+
+            const handleAuth = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const email = formData.get('email');
+                const name = formData.get('name');
+                
+                setUser({ 
+                    email, 
+                    name: name || email.split('@')[0],
+                    isAdmin: email === 'admin@shop.com' 
+                });
+                setShowAuthModal(false);
+            };
+
+            return (
+                <>
+                    <Header 
+                        user={user} 
+                        cartCount={cartCount} 
+                        onCartClick={() => setCartOpen(true)}
+                        onViewChange={setView}
+                        onAuthClick={() => setShowAuthModal(true)}
+                        onLogout={() => setUser(null)}
+                        currentView={view}
+                    />
+
+                    {view === 'shop' && (
+                        <>
+                            <Hero />
+                            <div className="container">
+                                <div className="filters">
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat}
+                                            className={`filter-btn ${selectedCategory === cat ? 'active' : ''}`}
+                                            onClick={() => setSelectedCategory(cat)}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="products-grid">
+                                    {filteredProducts.map(product => (
+                                        <ProductCard 
+                                            key={product.id} 
+                                            product={product} 
+                                            onAddToCart={addToCart}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {view === 'profile' && user && (
+                        <UserProfile user={user} orders={orders} />
+                    )}
+
+                    {view === 'admin' && user?.isAdmin && (
+                        <AdminDashboard products={products} orders={orders} />
+                    )}
+
+                    <CartSidebar 
+                        isOpen={cartOpen}
+                        onClose={() => setCartOpen(false)}
+                        cart={cart}
+                        onUpdateQuantity={updateQuantity}
+                        onRemoveItem={removeFromCart}
+                        total={cartTotal}
+                        onCheckout={handleCheckout}
+                    />
+
+                    {showAuthModal && (
+                        <AuthModal 
+                            mode={authMode}
+                            onClose={() => setShowAuthModal(false)}
+                            onSubmit={handleAuth}
+                            onToggleMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                        />
+                    )}
+                </>
+            );
+        }
+
+        // Header Component
+        function Header({ user, cartCount, onCartClick, onViewChange, onAuthClick, onLogout, currentView }) {
+            return (
+                <header className="header">
+                    <div className="header-content">
+                        <div className="logo" onClick={() => onViewChange('shop')} style={{cursor: 'pointer'}}>
+                            ÉLÉGANCE
+                        </div>
+                        <nav className="nav">
+                            <a href="#" className="nav-link" onClick={() => onViewChange('shop')}>Boutique</a>
+                            {user ? (
+                                <>
+                                    <a href="#" className="nav-link" onClick={() => onViewChange('profile')}>Mon Profil</a>
+                                    {user.isAdmin && (
+                                        <a href="#" className="nav-link" onClick={() => onViewChange('admin')}>Admin</a>
+                                    )}
+                                    <a href="#" className="nav-link" onClick={onLogout}>Déconnexion</a>
+                                </>
+                            ) : (
+                                <a href="#" className="nav-link" onClick={onAuthClick}>Connexion</a>
+                            )}
+                            <div className="cart-icon" onClick={onCartClick}>
+                                <i className="fas fa-shopping-bag"></i>
+                                {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+                            </div>
+                        </nav>
+                    </div>
+                </header>
+            );
+        }
+
+        // Hero Component
+        function Hero() {
+            return (
+                <div className="hero">
+                    <div className="hero-content">
+                        <h1>Collection Exclusive 2026</h1>
+                        <p>Découvrez notre sélection de produits premium soigneusement choisis pour vous</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Product Card Component
+        function ProductCard({ product, onAddToCart }) {
+            return (
+                <div className="product-card">
+                    <img src={product.image} alt={product.name} className="product-image" />
+                    <div className="product-info">
+                        <div className="product-category">{product.category}</div>
+                        <h3 className="product-title">{product.name}</h3>
+                        <p className="product-description">{product.description}</p>
+                        <div className="product-footer">
+                            <span className="product-price">{product.price.toFixed(2)} $</span>
+                            <button className="add-to-cart-btn" onClick={() => onAddToCart(product)}>
+                                <i className="fas fa-plus"></i> Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Cart Sidebar Component
+        function CartSidebar({ isOpen, onClose, cart, onUpdateQuantity, onRemoveItem, total, onCheckout }) {
+            return (
+                <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
+                    <div className="cart-header">
+                        <h2>Votre Panier</h2>
+                        <button className="close-cart" onClick={onClose}>
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div className="cart-items">
+                        {cart.length === 0 ? (
+                            <div className="empty-cart">
+                                <i className="fas fa-shopping-bag"></i>
+                                <p>Votre panier est vide</p>
+                            </div>
+                        ) : (
+                            cart.map(item => (
+                                <div key={item.id} className="cart-item">
+                                    <img src={item.image} alt={item.name} className="cart-item-image" />
+                                    <div className="cart-item-info">
+                                        <div className="cart-item-title">{item.name}</div>
+                                        <div className="cart-item-price">{item.price.toFixed(2)} $</div>
+                                        <div className="quantity-controls">
+                                            <button 
+                                                className="quantity-btn" 
+                                                onClick={() => onUpdateQuantity(item.id, -1)}
+                                            >
+                                                <i className="fas fa-minus"></i>
+                                            </button>
+                                            <span>{item.quantity}</span>
+                                            <button 
+                                                className="quantity-btn" 
+                                                onClick={() => onUpdateQuantity(item.id, 1)}
+                                            >
+                                                <i className="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button className="remove-item" onClick={() => onRemoveItem(item.id)}>
+                                        <i className="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    {cart.length > 0 && (
+                        <div className="cart-footer">
+                            <div className="cart-total">
+                                <span>Total:</span>
+                                <strong>{total.toFixed(2)} $</strong>
+                            </div>
+                            <button className="checkout-btn" onClick={onCheckout}>
+                                Procéder au paiement
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Auth Modal Component
+        function AuthModal({ mode, onClose, onSubmit, onToggleMode }) {
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <h2>{mode === 'login' ? 'Connexion' : 'Inscription'}</h2>
+                        <form onSubmit={onSubmit}>
+                            {mode === 'register' && (
+                                <div className="form-group">
+                                    <label>Nom complet</label>
+                                    <input type="text" name="name" required />
+                                </div>
+                            )}
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Mot de passe</label>
+                                <input type="password" name="password" required />
+                            </div>
+                            <button type="submit" className="submit-btn">
+                                {mode === 'login' ? 'Se connecter' : "S'inscrire"}
+                            </button>
+                        </form>
+                        <div className="auth-switch">
+                            {mode === 'login' ? (
+                                <p>Pas encore de compte? <button onClick={onToggleMode}>S'inscrire</button></p>
+                            ) : (
+                                <p>Déjà un compte? <button onClick={onToggleMode}>Se connecter</button></p>
+                            )}
+                        </div>
+                        <div style={{marginTop: '1rem', padding: '1rem', background: 'var(--secondary)', borderRadius: '8px', fontSize: '0.85rem'}}>
+                            <strong>Démo:</strong> Utilisez admin@shop.com pour accéder au dashboard admin
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // User Profile Component
+        function UserProfile({ user, orders }) {
+            return (
+                <div className="container">
+                    <div className="profile-section">
+                        <div className="profile-header">
+                            <div className="profile-avatar">
+                                {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="profile-info">
+                                <h2>{user.name}</h2>
+                                <p style={{color: 'var(--text-light)'}}>{user.email}</p>
+                            </div>
+                        </div>
+                        
+                        <h3 style={{fontFamily: 'Playfair Display, serif', fontSize: '1.5rem', marginBottom: '1.5rem'}}>
+                            Historique des commandes
+                        </h3>
+                        
+                        {orders.map(order => (
+                            <div key={order.id} className="order-history-item">
+                                <div className="order-header">
+                                    <span className="order-number">Commande #{order.id}</span>
+                                    <span className={`order-status ${order.status}`}>
+                                        {order.status === 'delivered' ? 'Livrée' : 'En traitement'}
+                                    </span>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: 'space-between', color: 'var(--text-light)', fontSize: '0.9rem'}}>
+                                    <span>Date: {order.date}</span>
+                                    <span>{order.items} article(s)</span>
+                                    <span style={{fontWeight: '600', color: 'var(--accent)'}}>{order.total.toFixed(2)} $</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Admin Dashboard Component
+        function AdminDashboard({ products, orders }) {
+            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+            const totalOrders = orders.length;
+            const totalProducts = products.length;
+            const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+
+            return (
+                <div className="admin-dashboard">
+                    <div className="admin-header">
+                        <h1>Tableau de Bord Administrateur</h1>
+                    </div>
+                    <div className="container">
+                        <div className="admin-stats">
+                            <div className="stat-card">
+                                <div className="stat-value">{totalRevenue.toFixed(2)} $</div>
+                                <div className="stat-label">Revenus totaux</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value">{totalOrders}</div>
+                                <div className="stat-label">Commandes</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value">{totalProducts}</div>
+                                <div className="stat-label">Produits</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value">{totalStock}</div>
+                                <div className="stat-label">Articles en stock</div>
+                            </div>
+                        </div>
+
+                        <div className="admin-sections">
+                            <div className="admin-section">
+                                <h2>Gestion des Produits</h2>
+                                <table className="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produit</th>
+                                            <th>Catégorie</th>
+                                            <th>Prix</th>
+                                            <th>Stock</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {products.map(product => (
+                                            <tr key={product.id}>
+                                                <td style={{fontWeight: '600'}}>{product.name}</td>
+                                                <td>{product.category}</td>
+                                                <td>{product.price.toFixed(2)} $</td>
+                                                <td>{product.stock} unités</td>
+                                                <td>
+                                                    <button className="action-btn">Modifier</button>
+                                                    <button className="action-btn delete">Supprimer</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="admin-section">
+                                <h2>Commandes Récentes</h2>
+                                <table className="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>N° Commande</th>
+                                            <th>Date</th>
+                                            <th>Articles</th>
+                                            <th>Total</th>
+                                            <th>Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {orders.map(order => (
+                                            <tr key={order.id}>
+                                                <td style={{fontWeight: '600'}}>{order.id}</td>
+                                                <td>{order.date}</td>
+                                                <td>{order.items}</td>
+                                                <td>{order.total.toFixed(2)} $</td>
+                                                <td>
+                                                    <span className={`order-status ${order.status}`}>
+                                                        {order.status === 'delivered' ? 'Livrée' : 'En traitement'}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button className="action-btn">Voir</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render App
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
